@@ -1,0 +1,578 @@
+---
+description: Guidelines for building Full Site Editing (FSE) block themes in WordPress
+globs: 
+alwaysApply: false
+---
+
+When developing WordPress block themes (Full Site Editing), follow these guidelines:
+
+1. Block Theme Structure:
+   ```
+   theme-name/
+   ├── assets/
+   │   ├── css/
+   │   ├── js/
+   │   └── images/
+   ├── parts/
+   │   ├── header.html
+   │   ├── footer.html
+   │   └── sidebar.html
+   ├── patterns/
+   │   ├── hero.php
+   │   ├── feature-grid.php
+   │   └── testimonials.php
+   ├── templates/
+   │   ├── index.html
+   │   ├── single.html
+   │   ├── page.html
+   │   ├── archive.html
+   │   └── 404.html
+   ├── functions.php
+   ├── style.css
+   ├── theme.json
+   └── readme.txt
+   ```
+
+2. Theme JSON Configuration:
+   ```json
+   {
+       "version": 2,
+       "settings": {
+           "color": {
+               "palette": [
+                   {
+                       "slug": "primary",
+                       "color": "#0073aa",
+                       "name": "Primary"
+                   },
+                   {
+                       "slug": "secondary",
+                       "color": "#23282d",
+                       "name": "Secondary"
+                   },
+                   {
+                       "slug": "background",
+                       "color": "#ffffff",
+                       "name": "Background"
+                   },
+                   {
+                       "slug": "foreground",
+                       "color": "#404040",
+                       "name": "Foreground"
+                   },
+                   {
+                       "slug": "tertiary",
+                       "color": "#f5f5f5",
+                       "name": "Tertiary"
+                   }
+               ],
+               "gradients": [
+                   {
+                       "slug": "primary-to-secondary",
+                       "gradient": "linear-gradient(135deg, #0073aa 0%, #23282d 100%)",
+                       "name": "Primary to Secondary"
+                   }
+               ],
+               "duotone": [
+                   {
+                       "slug": "dark-grayscale",
+                       "colors": ["#111111", "#f5f5f5"],
+                       "name": "Dark Grayscale"
+                   }
+               ],
+               "custom": true,
+               "customGradient": true,
+               "defaultPalette": false,
+               "defaultGradients": false
+           },
+           "typography": {
+               "fontSizes": [
+                   {
+                       "slug": "small",
+                       "size": "16px",
+                       "name": "Small"
+                   },
+                   {
+                       "slug": "normal",
+                       "size": "18px",
+                       "name": "Normal"
+                   },
+                   {
+                       "slug": "medium",
+                       "size": "24px",
+                       "name": "Medium"
+                   },
+                   {
+                       "slug": "large",
+                       "size": "32px",
+                       "name": "Large"
+                   },
+                   {
+                       "slug": "x-large",
+                       "size": "48px",
+                       "name": "Extra Large"
+                   }
+               ],
+               "fontFamilies": [
+                   {
+                       "slug": "heading",
+                       "fontFamily": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif",
+                       "name": "Heading"
+                   },
+                   {
+                       "slug": "body",
+                       "fontFamily": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif",
+                       "name": "Body"
+                   }
+               ],
+               "lineHeight": true,
+               "dropCap": true,
+               "customFontSize": true
+           },
+           "spacing": {
+               "units": ["px", "em", "rem", "vh", "vw", "%"],
+               "spacingSizes": [
+                   {
+                       "slug": "20",
+                       "size": "20px",
+                       "name": "1"
+                   },
+                   {
+                       "slug": "30",
+                       "size": "30px",
+                       "name": "2"
+                   },
+                   {
+                       "slug": "40",
+                       "size": "40px",
+                       "name": "3"
+                   }
+               ],
+               "padding": true,
+               "margin": true
+           },
+           "layout": {
+               "contentSize": "800px",
+               "wideSize": "1200px"
+           },
+           "custom": {
+               "headings": {
+                   "fontWeight": "700",
+                   "lineHeight": "1.2"
+               },
+               "body": {
+                   "fontWeight": "400",
+                   "lineHeight": "1.5"
+               }
+           }
+       },
+       "styles": {
+           "color": {
+               "background": "var(--wp--preset--color--background)",
+               "text": "var(--wp--preset--color--foreground)"
+           },
+           "typography": {
+               "fontFamily": "var(--wp--preset--font-family--body)",
+               "fontSize": "var(--wp--preset--font-size--normal)",
+               "lineHeight": "var(--wp--custom--body--line-height)"
+           },
+           "elements": {
+               "h1": {
+                   "typography": {
+                       "fontFamily": "var(--wp--preset--font-family--heading)",
+                       "fontSize": "var(--wp--preset--font-size--x-large)",
+                       "fontWeight": "var(--wp--custom--headings--font-weight)",
+                       "lineHeight": "var(--wp--custom--headings--line-height)"
+                   }
+               },
+               "h2": {
+                   "typography": {
+                       "fontFamily": "var(--wp--preset--font-family--heading)",
+                       "fontSize": "var(--wp--preset--font-size--large)",
+                       "fontWeight": "var(--wp--custom--headings--font-weight)",
+                       "lineHeight": "var(--wp--custom--headings--line-height)"
+                   }
+               },
+               "h3": {
+                   "typography": {
+                       "fontFamily": "var(--wp--preset--font-family--heading)",
+                       "fontSize": "var(--wp--preset--font-size--medium)",
+                       "fontWeight": "var(--wp--custom--headings--font-weight)",
+                       "lineHeight": "var(--wp--custom--headings--line-height)"
+                   }
+               },
+               "link": {
+                   "color": {
+                       "text": "var(--wp--preset--color--primary)"
+                   }
+               }
+           },
+           "blocks": {
+               "core/paragraph": {
+                   "spacing": {
+                       "margin": {
+                           "bottom": "1.5rem"
+                       }
+                   }
+               },
+               "core/heading": {
+                   "spacing": {
+                       "margin": {
+                           "top": "2rem",
+                           "bottom": "1rem"
+                       }
+                   }
+               }
+           }
+       },
+       "templateParts": [
+           {
+               "name": "header",
+               "title": "Header",
+               "area": "header"
+           },
+           {
+               "name": "footer",
+               "title": "Footer",
+               "area": "footer"
+           },
+           {
+               "name": "sidebar",
+               "title": "Sidebar",
+               "area": "uncategorized"
+           }
+       ],
+       "customTemplates": [
+           {
+               "name": "page-no-title",
+               "title": "Page (No Title)",
+               "postTypes": ["page"]
+           },
+           {
+               "name": "single-sidebar-left",
+               "title": "Single Post with Left Sidebar",
+               "postTypes": ["post"]
+           }
+       ]
+   }
+   ```
+
+3. Template HTML Files:
+   ```html
+   <!-- templates/index.html -->
+   <!-- wp:template-part {"slug":"header","theme":"theme-name","tagName":"header","className":"site-header"} /-->
+   
+   <!-- wp:group {"tagName":"main","className":"site-main"} -->
+   <main class="wp-block-group site-main">
+       <!-- wp:query {"queryId":1,"query":{"perPage":10,"pages":0,"offset":0,"postType":"post","order":"desc","orderBy":"date","author":"","search":"","exclude":[],"sticky":"","inherit":true}} -->
+       <!-- wp:post-template -->
+           <!-- wp:post-title {"isLink":true} /-->
+           <!-- wp:post-featured-image {"isLink":true,"width":"100%","height":"300px"} /-->
+           <!-- wp:post-excerpt /-->
+           <!-- wp:post-date /-->
+       <!-- /wp:post-template -->
+       
+       <!-- wp:query-pagination -->
+           <!-- wp:query-pagination-previous /-->
+           <!-- wp:query-pagination-numbers /-->
+           <!-- wp:query-pagination-next /-->
+       <!-- /wp:query-pagination -->
+       <!-- /wp:query -->
+   </main>
+   <!-- /wp:group -->
+   
+   <!-- wp:template-part {"slug":"footer","theme":"theme-name","tagName":"footer","className":"site-footer"} /-->
+   
+   <!-- templates/single.html -->
+   <!-- wp:template-part {"slug":"header","theme":"theme-name"} /-->
+   
+   <!-- wp:group {"tagName":"main","className":"site-main"} -->
+   <main class="wp-block-group site-main">
+       <!-- wp:post-title {"level":1} /-->
+       <!-- wp:post-featured-image {"align":"wide"} /-->
+       
+       <!-- wp:group {"className":"post-meta"} -->
+       <div class="wp-block-group post-meta">
+           <!-- wp:post-date /-->
+           <!-- wp:post-author {"showAvatar":false} /-->
+       </div>
+       <!-- /wp:group -->
+       
+       <!-- wp:post-content /-->
+       
+       <!-- wp:post-terms {"term":"category"} /-->
+       <!-- wp:post-terms {"term":"post_tag"} /-->
+       
+       <!-- wp:post-comments /-->
+   </main>
+   <!-- /wp:group -->
+   
+   <!-- wp:template-part {"slug":"footer","theme":"theme-name"} /-->
+   ```
+
+4. Template Parts:
+   ```html
+   <!-- parts/header.html -->
+   <!-- wp:group {"className":"site-header"} -->
+   <div class="wp-block-group site-header">
+       <!-- wp:group {"className":"site-branding"} -->
+       <div class="wp-block-group site-branding">
+           <!-- wp:site-logo /-->
+           <!-- wp:site-title /-->
+           <!-- wp:site-tagline /-->
+       </div>
+       <!-- /wp:group -->
+       
+       <!-- wp:navigation {"ref":123,"className":"primary-navigation"} /-->
+   </div>
+   <!-- /wp:group -->
+   
+   <!-- parts/footer.html -->
+   <!-- wp:group {"className":"site-footer"} -->
+   <div class="wp-block-group site-footer">
+       <!-- wp:paragraph {"align":"center"} -->
+       <p class="has-text-align-center">
+           <!-- wp:pattern {"slug":"theme-name/footer-copyright"} /-->
+       </p>
+       <!-- /wp:paragraph -->
+   </div>
+   <!-- /wp:group -->
+   ```
+
+5. Block Patterns:
+   ```php
+   <?php
+   /**
+    * Register block patterns for the theme.
+    */
+   function myprefix_register_block_patterns(): void {
+       if (!function_exists('register_block_pattern_category') || !function_exists('register_block_pattern')) {
+           return;
+       }
+       
+       // Register pattern categories
+       register_block_pattern_category(
+           'theme-name',
+           ['label' => __('Theme Name', 'theme-name')]
+       );
+       
+       // Register patterns
+       register_block_pattern(
+           'theme-name/hero-section',
+           [
+               'title'       => __('Hero Section', 'theme-name'),
+               'description' => __('A hero section with a heading, text, and a button.', 'theme-name'),
+               'categories'  => ['theme-name'],
+               'content'     => '<!-- wp:cover {"url":"' . get_theme_file_uri('assets/images/hero-background.jpg') . '","dimRatio":50,"minHeight":80,"minHeightUnit":"vh","align":"full"} -->
+                   <div class="wp-block-cover alignfull" style="min-height:80vh"><span aria-hidden="true" class="has-background-dim"></span>
+                       <div class="wp-block-cover__inner-container">
+                           <!-- wp:heading {"level":1,"textAlign":"center","style":{"typography":{"fontSize":"3.5rem"}}} -->
+                           <h1 class="has-text-align-center" style="font-size:3.5rem">' . __('Welcome to Our Website', 'theme-name') . '</h1>
+                           <!-- /wp:heading -->
+                           
+                           <!-- wp:paragraph {"align":"center","fontSize":"large"} -->
+                           <p class="has-text-align-center has-large-font-size">' . __('This is a short description that introduces your website to visitors.', 'theme-name') . '</p>
+                           <!-- /wp:paragraph -->
+                           
+                           <!-- wp:buttons {"contentJustification":"center"} -->
+                           <div class="wp-block-buttons is-content-justification-center">
+                               <!-- wp:button {"className":"is-style-fill"} -->
+                               <div class="wp-block-button is-style-fill"><a class="wp-block-button__link">' . __('Learn More', 'theme-name') . '</a></div>
+                               <!-- /wp:button -->
+                           </div>
+                           <!-- /wp:buttons -->
+                       </div>
+                   </div>
+               <!-- /wp:cover -->',
+           ]
+       );
+   }
+   add_action('init', 'myprefix_register_block_patterns');
+   ```
+
+6. Block Styles:
+   ```php
+   /**
+    * Register custom block styles.
+    */
+   function myprefix_register_block_styles(): void {
+       register_block_style(
+           'core/paragraph',
+           [
+               'name'         => 'theme-name-callout',
+               'label'        => __('Callout', 'theme-name'),
+               'style_handle' => 'theme-name-blocks',
+           ]
+       );
+       
+       register_block_style(
+           'core/button',
+           [
+               'name'         => 'theme-name-button-outline',
+               'label'        => __('Outline', 'theme-name'),
+               'style_handle' => 'theme-name-blocks',
+           ]
+       );
+   }
+   add_action('init', 'myprefix_register_block_styles');
+   ```
+
+7. Block Variations:
+   ```php
+   /**
+    * Register block variations.
+    */
+   function myprefix_register_block_variations(): void {
+       wp_enqueue_script(
+           'theme-name-block-variations',
+           get_theme_file_uri('assets/js/block-variations.js'),
+           ['wp-blocks'],
+           wp_get_theme()->get('Version'),
+           true
+       );
+   }
+   add_action('enqueue_block_editor_assets', 'myprefix_register_block_variations');
+   
+   // In assets/js/block-variations.js
+   wp.blocks.registerBlockVariation('core/group', {
+       name: 'theme-name-card',
+       title: 'Card',
+       description: 'A card container with padding and border',
+       attributes: {
+           className: 'is-style-card',
+           backgroundColor: 'background',
+           borderColor: 'primary'
+       },
+       innerBlocks: [
+           ['core/heading', { placeholder: 'Card Title' }],
+           ['core/paragraph', { placeholder: 'Card content goes here...' }]
+       ]
+   });
+   ```
+
+8. Block Templates:
+   ```php
+   /**
+    * Register custom post types with block templates.
+    */
+   function myprefix_register_testimonial_post_type(): void {
+       $args = [
+           'public'       => true,
+           'label'        => __('Testimonials', 'theme-name'),
+           'labels'       => [
+               'singular_name' => __('Testimonial', 'theme-name'),
+               'add_new_item'  => __('Add New Testimonial', 'theme-name'),
+               'edit_item'     => __('Edit Testimonial', 'theme-name'),
+           ],
+           'supports'     => ['title', 'editor', 'thumbnail', 'custom-fields'],
+           'has_archive'  => true,
+           'show_in_rest' => true,
+           'template'     => [
+               ['core/group', [], [
+                   ['core/image', [
+                       'className' => 'testimonial-avatar',
+                       'align' => 'center',
+                       'sizeSlug' => 'thumbnail'
+                   ]],
+                   ['core/quote', [
+                       'className' => 'testimonial-content'
+                   ]],
+                   ['core/paragraph', [
+                       'className' => 'testimonial-author',
+                       'placeholder' => __('Author Name', 'theme-name')
+                   ]],
+                   ['core/paragraph', [
+                       'className' => 'testimonial-position',
+                       'placeholder' => __('Position', 'theme-name')
+                   ]]
+               ]]
+           ],
+           'template_lock' => 'all',
+       ];
+       register_post_type('testimonial', $args);
+   }
+   add_action('init', 'myprefix_register_testimonial_post_type');
+   ```
+
+9. Theme Support for Block Editor:
+   ```php
+   /**
+    * Setup theme support for block editor features.
+    */
+   function myprefix_setup(): void {
+       // Add support for block styles
+       add_theme_support('wp-block-styles');
+       
+       // Add support for full and wide align blocks
+       add_theme_support('align-wide');
+       
+       // Add support for custom spacing
+       add_theme_support('custom-spacing');
+       
+       // Add support for editor styles
+       add_theme_support('editor-styles');
+       
+       // Enqueue editor styles
+       add_editor_style('assets/css/editor-style.css');
+       
+       // Add responsive embeds
+       add_theme_support('responsive-embeds');
+       
+       // Add support for custom line-height
+       add_theme_support('custom-line-height');
+       
+       // Add support for custom units
+       add_theme_support('custom-units');
+       
+       // Add support for experimental link color control
+       add_theme_support('experimental-link-color');
+   }
+   add_action('after_setup_theme', 'myprefix_setup');
+   ```
+
+10. Advanced Block Theme Customization:
+    ```php
+    /**
+     * Register custom block categories.
+     *
+     * @param array $categories Block categories.
+     * @return array Modified block categories.
+     */
+    function myprefix_block_categories(array $categories): array {
+        return array_merge(
+            [
+                [
+                    'slug'  => 'theme-name',
+                    'title' => __('Theme Name Blocks', 'theme-name'),
+                    'icon'  => null,
+                ],
+            ],
+            $categories
+        );
+    }
+    add_filter('block_categories_all', 'myprefix_block_categories', 10, 1);
+    
+    /**
+     * Filter the theme.json data.
+     *
+     * @param array $theme_json The theme.json data.
+     * @return array The filtered theme.json data.
+     */
+    function myprefix_theme_json_data(array $theme_json): array {
+        // Add dynamic values based on user settings
+        $primary_color = get_theme_mod('primary_color', '#0073aa');
+        
+        // Find and replace the primary color
+        if (isset($theme_json['settings']['color']['palette'])) {
+            foreach ($theme_json['settings']['color']['palette'] as $key => $value) {
+                if ($value['slug'] === 'primary') {
+                    $theme_json['settings']['color']['palette'][$key]['color'] = $primary_color;
+                    break;
+                }
+            }
+        }
+        
+        return $theme_json;
+    }
+    add_filter('wp_theme_json_data_theme', 'myprefix_theme_json_data');
+    ``` 

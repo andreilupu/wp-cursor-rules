@@ -1,0 +1,405 @@
+---
+description: Guidelines for creating and using WordPress theme templates and template parts
+globs: 
+alwaysApply: false
+---
+
+When working with WordPress theme templates, follow these guidelines:
+
+1. Template Parts Organization:
+   ```php
+   // Structure for template-parts directory
+   template-parts/
+   ├── content/             // Post content templates
+   │   ├── content.php      // Default content
+   │   ├── content-page.php // Page content
+   │   └── content-none.php // No results
+   ├── header/              // Header variations
+   │   ├── header-main.php
+   │   └── header-minimal.php
+   ├── footer/              // Footer variations
+   │   ├── footer-main.php
+   │   └── footer-minimal.php
+   └── components/          // Reusable UI components
+       ├── card.php
+       ├── button.php
+       └── pagination.php
+   
+   // Loading template parts
+   get_template_part('template-parts/content/content', get_post_type());
+   get_template_part('template-parts/components/card', 'product', ['product' => $product]);
+   ```
+
+2. Custom Page Templates:
+   ```php
+   <?php
+   /**
+    * Template Name: Full Width
+    * Template Post Type: page, post
+    *
+    * @package Theme_Name
+    */
+   
+   get_header();
+   ?>
+   
+   <main id="primary" class="site-main full-width">
+       <?php
+       while (have_posts()) :
+           the_post();
+           get_template_part('template-parts/content/content', 'page');
+       endwhile;
+       ?>
+   </main>
+   
+   <?php
+   get_footer();
+   ```
+
+3. Template Parts With Arguments:
+   ```php
+   // Defining a template part that accepts arguments
+   // template-parts/components/card.php
+   <?php
+   /**
+    * Card component template part.
+    *
+    * @package Theme_Name
+    *
+    * @param array $args {
+    *     Optional. Arguments to customize output.
+    *     @type string $title    Card title.
+    *     @type string $content  Card content.
+    *     @type string $image_id Card image ID.
+    *     @type string $url      Card link URL.
+    * }
+    */
+   
+   // Extract args with defaults
+   $args = wp_parse_args($args, [
+       'title'    => '',
+       'content'  => '',
+       'image_id' => 0,
+       'url'      => '',
+   ]);
+   
+   // Extract for easier access
+   $title    = $args['title'];
+   $content  = $args['content'];
+   $image_id = $args['image_id'];
+   $url      = $args['url'];
+   ?>
+   
+   <div class="card">
+       <?php if ($image_id) : ?>
+           <div class="card__image">
+               <?php echo wp_get_attachment_image($image_id, 'medium'); ?>
+           </div>
+       <?php endif; ?>
+       
+       <div class="card__content">
+           <?php if ($title) : ?>
+               <h3 class="card__title"><?php echo esc_html($title); ?></h3>
+           <?php endif; ?>
+           
+           <?php if ($content) : ?>
+               <div class="card__text"><?php echo wp_kses_post($content); ?></div>
+           <?php endif; ?>
+           
+           <?php if ($url) : ?>
+               <a href="<?php echo esc_url($url); ?>" class="card__link">
+                   <?php esc_html_e('Read more', 'theme-name'); ?>
+               </a>
+           <?php endif; ?>
+       </div>
+   </div>
+   
+   // Using the template part with arguments
+   get_template_part('template-parts/components/card', null, [
+       'title'    => get_the_title(),
+       'content'  => get_the_excerpt(),
+       'image_id' => get_post_thumbnail_id(),
+       'url'      => get_permalink(),
+   ]);
+   ```
+
+4. Creating Conditional Templates:
+   ```php
+   // Conditionally choose templates based on data
+   
+   // For categories
+   if (is_category()) {
+       $category = get_queried_object();
+       $templates = [
+           'category-' . $category->slug . '.php',
+           'category-' . $category->term_id . '.php',
+           'category.php',
+           'archive.php',
+       ];
+       locate_template($templates, true);
+   }
+   
+   // For custom post types
+   if (is_singular('product')) {
+       $product = get_queried_object();
+       $product_type = get_post_meta($product->ID, 'product_type', true);
+       
+       if ($product_type) {
+           get_template_part('template-parts/content/content-product', $product_type);
+       } else {
+           get_template_part('template-parts/content/content-product');
+       }
+   }
+   ```
+
+5. Template Functions:
+   ```php
+   /**
+    * Check if we should display the sidebar
+    */
+   function myprefix_display_sidebar(): bool {
+       // Don't show sidebar on specific templates
+       if (is_page_template('templates/full-width.php')) {
+           return false;
+       }
+       
+       // Don't show sidebar on specific post types
+       if (is_singular('product')) {
+           return false;
+       }
+       
+       // Allow filtering the sidebar display
+       return apply_filters('myprefix_display_sidebar', true);
+   }
+   
+   // In sidebar.php
+   <?php if (myprefix_display_sidebar()) : ?>
+       <aside id="secondary" class="widget-area">
+           <?php dynamic_sidebar('sidebar-1'); ?>
+       </aside>
+   <?php endif; ?>
+   ```
+
+6. Creating Archive Templates:
+   ```php
+   // archive.php
+   <?php get_header(); ?>
+   
+   <main id="primary" class="site-main">
+       <?php if (have_posts()) : ?>
+           <header class="page-header">
+               <?php
+               the_archive_title('<h1 class="page-title">', '</h1>');
+               the_archive_description('<div class="archive-description">', '</div>');
+               ?>
+           </header>
+   
+           <?php
+           while (have_posts()) :
+               the_post();
+               /*
+                * Include the Post-Type-specific template for the content.
+                * If you want to override this in a child theme, then include a file
+                * called content-___.php (where ___ is the Post Type name) and that will be used instead.
+                */
+               get_template_part('template-parts/content/content', get_post_type());
+           endwhile;
+   
+           the_posts_pagination([
+               'prev_text' => '<span class="screen-reader-text">' . esc_html__('Previous page', 'theme-name') . '</span>',
+               'next_text' => '<span class="screen-reader-text">' . esc_html__('Next page', 'theme-name') . '</span>',
+           ]);
+       else :
+           get_template_part('template-parts/content/content', 'none');
+       endif;
+       ?>
+   </main>
+   
+   <?php
+   get_sidebar();
+   get_footer();
+   ```
+
+7. Custom Post Type Templates:
+   ```php
+   // single-{post-type}.php
+   <?php get_header(); ?>
+   
+   <main id="primary" class="site-main">
+       <?php
+       while (have_posts()) :
+           the_post();
+           
+           // Get custom fields
+           $field_one = get_post_meta(get_the_ID(), 'field_one', true);
+           $field_two = get_post_meta(get_the_ID(), 'field_two', true);
+           ?>
+           
+           <article id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
+               <header class="entry-header">
+                   <?php the_title('<h1 class="entry-title">', '</h1>'); ?>
+               </header>
+               
+               <?php if (has_post_thumbnail()) : ?>
+                   <div class="featured-image">
+                       <?php the_post_thumbnail('large'); ?>
+                   </div>
+               <?php endif; ?>
+               
+               <div class="entry-content">
+                   <?php the_content(); ?>
+                   
+                   <?php if ($field_one) : ?>
+                       <div class="custom-field">
+                           <strong><?php esc_html_e('Field One:', 'theme-name'); ?></strong>
+                           <?php echo esc_html($field_one); ?>
+                       </div>
+                   <?php endif; ?>
+                   
+                   <?php if ($field_two) : ?>
+                       <div class="custom-field">
+                           <strong><?php esc_html_e('Field Two:', 'theme-name'); ?></strong>
+                           <?php echo esc_html($field_two); ?>
+                       </div>
+                   <?php endif; ?>
+               </div>
+           </article>
+           
+           <?php
+           // If comments are open or we have at least one comment, load up the comment template.
+           if (comments_open() || get_comments_number()) :
+               comments_template();
+           endif;
+       endwhile;
+       ?>
+   </main>
+   
+   <?php
+   get_sidebar();
+   get_footer();
+   ```
+
+8. Template Hooks:
+   ```php
+   /**
+    * Add hooks to templates for extensibility
+    */
+   
+   // In header.php
+   <?php do_action('myprefix_before_header'); ?>
+   <header id="masthead" class="site-header">
+       <?php do_action('myprefix_header_start'); ?>
+       
+       <div class="site-branding">
+           <?php the_custom_logo(); ?>
+       </div>
+       
+       <nav id="site-navigation" class="main-navigation">
+           <?php
+           wp_nav_menu([
+               'theme_location' => 'primary',
+               'menu_id'        => 'primary-menu',
+           ]);
+           ?>
+       </nav>
+       
+       <?php do_action('myprefix_header_end'); ?>
+   </header>
+   <?php do_action('myprefix_after_header'); ?>
+   
+   // Using hooks in functions.php or plugin
+   function myprefix_add_search_to_header(): void {
+       ?>
+       <div class="header-search">
+           <?php get_search_form(); ?>
+       </div>
+       <?php
+   }
+   add_action('myprefix_header_end', 'myprefix_add_search_to_header');
+   ```
+
+9. Template Fallbacks:
+   ```php
+   /**
+    * Get appropriate template part with fallbacks
+    *
+    * @param string $slug The slug name for the generic template.
+    * @param string $context The context name for the specialized template.
+    * @return void
+    */
+   function myprefix_get_template_part(string $slug, string $context = ''): void {
+       $templates = [];
+       $name = $context ? "-{$context}" : '';
+       
+       // Try specialized template first
+       if ($context) {
+           $templates[] = "{$slug}{$name}.php";
+       }
+       
+       // Then try generic one
+       $templates[] = "{$slug}.php";
+       
+       // Then try a very generic fallback
+       $templates[] = 'template-parts/fallback.php';
+       
+       // Locate and include the template
+       $template = locate_template($templates);
+       
+       if ($template) {
+           include $template;
+       }
+   }
+   
+   // Usage
+   myprefix_get_template_part('template-parts/content/content', get_post_type());
+   ```
+
+10. Block Template Parts:
+    ```php
+    /**
+     * Register block template parts for FSE themes
+     */
+    function myprefix_register_template_parts(): void {
+        $template_parts = [
+            [
+                'name'  => 'header',
+                'title' => __('Header', 'theme-name'),
+                'area'  => 'header',
+            ],
+            [
+                'name'  => 'footer',
+                'title' => __('Footer', 'theme-name'),
+                'area'  => 'footer',
+            ],
+            [
+                'name'  => 'sidebar',
+                'title' => __('Sidebar', 'theme-name'),
+                'area'  => 'uncategorized',
+            ],
+        ];
+        
+        foreach ($template_parts as $template_part) {
+            register_block_template_part($template_part);
+        }
+    }
+    add_action('init', 'myprefix_register_template_parts');
+    
+    // Block templates (theme.json)
+    "templates": [
+        {
+            "name": "index",
+            "title": "Main Template",
+            "postTypes": ["page", "post"]
+        },
+        {
+            "name": "single",
+            "title": "Single Post",
+            "postTypes": ["post"]
+        },
+        {
+            "name": "page",
+            "title": "Page",
+            "postTypes": ["page"]
+        }
+    ]
+    ``` 
