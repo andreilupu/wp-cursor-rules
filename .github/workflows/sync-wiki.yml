@@ -1,0 +1,82 @@
+# Workflow name
+name: Sync Wiki Folder to GitHub Wiki
+
+# Controls when the action will run
+on:
+  # Triggers the workflow on push events but only for the main branch
+  push:
+    branches:
+      - main # Or your default branch (e.g., master)
+    paths:
+      - 'wiki/**' # Only run if files in the 'wiki/' directory change
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  # This workflow contains a single job called "sync-wiki"
+  sync-wiki:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Step 1: Check out the main repository content
+      - name: Checkout main repository
+        uses: actions/checkout@v4
+        with:
+          path: main # Checkout main repo into 'main' directory
+
+      # Step 2: Check out the wiki repository content
+      # The wiki is a separate git repository
+      - name: Checkout wiki repository
+        uses: actions/checkout@v4
+        with:
+          # Constructs the wiki repository URL (e.g., user/repo.wiki)
+          repository: ${{ github.repository }}.wiki
+          # Use a Personal Access Token (PAT) with 'repo' scope.
+          # Store this PAT as a secret named WIKI_SYNC_TOKEN in your repository settings.
+          # DO NOT hardcode the token here.
+          token: ${{ secrets.WIKI_SYNC_TOKEN }}
+          path: wiki_repo # Checkout wiki repo into 'wiki_repo' directory
+
+      # Step 3: Sync files from the 'wiki/' folder to the checked-out wiki repository
+      - name: Sync files to wiki repo
+        run: |
+          # Ensure the wiki_repo directory exists (it might be empty if wiki is new)
+          mkdir -p wiki_repo
+
+          # Use rsync to copy files.
+          # -a: archive mode (preserves permissions, ownership, timestamps, etc.)
+          # -v: verbose
+          # --delete: delete files in the destination (wiki_repo) that don't exist in the source (main/wiki/)
+          # --exclude='.git': crucial to avoid copying the .git directory of the wiki repo itself
+          # Source: main/wiki/ (trailing slash copies contents)
+          # Destination: wiki_repo/
+          rsync -av --delete --exclude='.git' main/wiki/ wiki_repo/
+
+      # Step 4: Commit and push changes to the wiki repository
+      - name: Commit and push changes
+        run: |
+          cd wiki_repo # Change directory to the checked-out wiki repository
+
+          # Configure Git user for the commit
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+
+          # Check if there are any changes to commit
+          if git diff --quiet && git diff --staged --quiet; then
+            echo "No changes to commit to the wiki."
+            exit 0 # Exit successfully if no changes
+          fi
+
+          # Stage all changes (new, modified, deleted files)
+          git add .
+
+          # Commit the changes
+          git commit -m "Sync wiki content from main repository [skip ci]"
+
+          # Push the changes back to the wiki repository
+          # Note: GitHub Wikis often use 'master' as the default branch, even if your main repo uses 'main'.
+          # Check your wiki's default branch and adjust if necessary.
+          git push origin master 
